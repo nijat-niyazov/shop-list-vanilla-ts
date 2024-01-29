@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script defer src="js/main.js"></script>
+  </head>
+  <body>
+    <div id="shop-list" class=" p-4 w-1/2 mx-auto my-10 ">
+      <div class="p-4 rounded-md border-2 border-black/20 grid gap-4">
+        <header id="header" class="flex items-center gap-2">
+         <div id="logo" class="p-3 border-2 border-black/30 bg-yellow-300"> <img src="./assets/list.png" alt="" width="30" height="30"></div>
+          <h3 id="title" class="titleClass text-3xl text-center">Shopping List</h3></header>
+        <form action="" method="post" class="grid gap-3 mb-4">
+          <div class="flex items-center gap-3">
+            <input
+              class="border-2 outline-none p-2 border-black/30 rounded-md grow"
+              type="text"
+              placeholder="Enter Item"
+            />
+
+            <button type="button" id="toggle" data-direction="down" class="text-3xl">⬇</button>
+          </div>
+          <button
+            class="bg-black text-white rounded-md px-6 py-2 font-semibold justify-self-start"
+            type="submit"
+          >
+            + Add Item
+          </button>
+        </form>
+
+        <input class="border-b-2 border-black outline-none w-full px-4 py-2" placeholder="Filter" > </input>
+
+
+        <div class="items">
+          <h4 class="text-3xl text-center font-bold my-4 opacity-50">Empty List</h4>
+  
+          <!-- <ul id="items-list" class="p-2 grid gap-2 font-bold">
+            <li id="item" class="p-2 flex items-center justify-between border-2 border-black/30 rounded-md"><span>Apple</span>
+            
+              <button type="button">❌</button>
+            </li>
+          </ul> -->
+        </div>
+
+        <button
+            class="active:bg-red-600 hover:bg-red-500 bg-red-400 text-white rounded-md px-6 py-2 font-semibold disabled:opacity-50"
+            
+            type="button"
+            id="clear"
+          >
+            Clear All
+          </button>
+      </div>
+    </div>
+
+  </body>
+</html>
