@@ -22,33 +22,29 @@
               placeholder="Enter Item"
             />
 
-            <button type="button" id="toggle" data-direction="down" class="text-3xl">⬇</button>
+            <button tabindex="-1" type="button" id="toggle" data-direction="down" class="text-3xl">⬇</button>
+            
           </div>
           <button
-            class="bg-black text-white rounded-md px-6 py-2 font-semibold justify-self-start"
+            class="bg-black/80 text-white rounded-md px-6 py-2 font-semibold justify-self-start"
             type="submit"
           >
             + Add Item
           </button>
         </form>
 
-        <input class="border-b-2 border-black outline-none w-full px-4 py-2" placeholder="Filter" > </input>
+        <input id="filter-input" class="border-b-2 border-black outline-none w-full px-4 py-2" placeholder="Filter" > </input>
+        
 
 
         <div class="items">
           <h4 class="text-3xl text-center font-bold my-4 opacity-50">Empty List</h4>
   
-          <!-- <ul id="items-list" class="p-2 grid gap-2 font-bold">
-            <li id="item" class="p-2 flex items-center justify-between border-2 border-black/30 rounded-md"><span>Apple</span>
-            
-              <button type="button">❌</button>
-            </li>
-          </ul> -->
+        
         </div>
 
         <button
-            class="active:bg-red-600 hover:bg-red-500 bg-red-400 text-white rounded-md px-6 py-2 font-semibold disabled:opacity-50"
-            
+            class="bg-red-500 text-white rounded-md px-6 py-2 font-semibold disabled:opacity-50"
             type="button"
             id="clear"
           >
@@ -57,5 +53,37 @@
       </div>
     </div>
 
+    <div id="modal" class="bg-black/50 top-0 opacity-0 left-0 fixed w-screen h-screen transition-all duration-200 pointer-events-none">
+      
+        <div id="back-drop" class="flex  items-center h-full justify-center bg-blue-300/30"/>
+          
+          
+        
+        <div id="remove" class="w-[500px] z-10 h-auto bg-gray-300 p-10 rounded-md  ">
+            <h1 class="font-bold text-center text-3xl">Are you sure?</h1>
+            <div class="flex gap-10 items-center mt-20">
+
+              <button id="no" class="bg-red-500 w-1/2 p-2 font-semibold rounded-md">No</button>
+              <button id="yes" class="bg-green-500 w-1/2 p-2 font-semibold rounded-md">Yes</button>
+            </div>
+          </div>
+
+        <div id="edit" class="w-[500px] z-10 h-auto bg-gray-300 p-10 rounded-md  ">
+            <h1 class="font-bold text-center text-3xl">Update Item</h1>
+            <form class="gap-4 grid  mt-20">
+
+              <input type="text" class="border-2 rounded-md p-1 border-black/50"/>
+              <button id="yes" class="bg-green-500 w-full p-2 font-semibold rounded-md">Submit</button>
+            </form>
+          </div>
+
+
+        </div>
+    
+      
   </body>
 </html>
+
+
+
+        
