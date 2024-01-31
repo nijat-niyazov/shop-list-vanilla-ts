@@ -1,10 +1,10 @@
 "use strict";
 const form = document.querySelector("form");
 const addItemInput = form.querySelector("input");
-const shopContainer = document.querySelector(".items");
 const toggleBtn = document.querySelector("#toggle");
-const emptyInfo = shopContainer.querySelector("h4");
 const filterInput = document.querySelector("#filter-input");
+const shopContainer = document.querySelector(".items");
+const emptyInfo = shopContainer.querySelector("h4");
 const clearBtn = document.querySelector("#clear");
 const modal = document.querySelector("#modal");
 const list = createElement("ul");
@@ -12,121 +12,195 @@ list.setAttribute("id", "items-list");
 list.className = "p-2 grid gap-2 font-bold";
 /* ------------------ Add item to top or bottom of the list ----------------- */
 const toggleButton = () => toggleBtn.classList.toggle("rotate-180");
+/* ------------------------- Get, add, and remove items from storage ------------------------- */
+function getItemsFromStorage() {
+    return JSON.parse(localStorage.getItem("items") || "[]");
+}
+function setStorageItemsTo(items) {
+    localStorage.setItem("items", JSON.stringify(items));
+}
+function addItemToStorage(text) {
+    const items = getItemsFromStorage();
+    items.push({ completed: false, text });
+    setStorageItemsTo(items);
+}
+function updateItemOfStorage(text) {
+    const updated = getItemsFromStorage().map((item) => (item.text === text ? { completed: !item.completed, text } : item));
+    setStorageItemsTo(updated);
+}
+function removeItemFromStorage(text) {
+    const filtered = getItemsFromStorage().filter((item) => item.text !== text);
+    setStorageItemsTo(filtered);
+}
 /* -------------------------- Creating New Element -------------------------- */
-function createElement(tag, className) {
+function createElement(tag, textContent, className) {
     const element = document.createElement(tag);
     if (tag === "button")
         element.setAttribute("type", "button");
+    if (textContent)
+        element.appendChild(document.createTextNode(textContent));
     return element;
 }
 /* ------------------------- Creating new list item ------------------------- */
-function createNewItem(value) {
+function createNewItem(value, checked) {
     // <li> item
     const newItem = createElement("li");
     newItem.setAttribute("id", "item");
     newItem.className = "p-2 flex items-center justify-between border-2 border-black/30 rounded-md";
     // <span> text
-    const text = createElement("span");
-    text.textContent = value;
-    // <div> <buttons> </div>
-    const allBtns = createElement("div");
-    allBtns.className = "flex gap-2 bg-gray-300 rounded-md p-1 items-center";
-    const remBtn = createElement("button");
-    remBtn.textContent = "❌";
+    const text = createElement("span", value);
+    if (checked)
+        markItemAsCompleted(text);
+    // <div> <input> <buttons> </div>
+    const allActions = createElement("div");
+    allActions.className = "flex gap-2 bg-gray-300 rounded-md p-1 items-center";
+    // <input> checkbox
+    const checkedEl = createElement("input");
+    checkedEl.type = "checkbox";
+    checkedEl.className = "w-5 h-5";
+    checkedEl.checked = checked || false;
+    const editBtn = createElement("button", "🖊");
+    editBtn.setAttribute("id", "update");
+    const remBtn = createElement("button", "❌");
     remBtn.setAttribute("id", "remove");
-    const editBtn = createElement("button");
-    editBtn.textContent = "➕";
-    editBtn.setAttribute("id", "edit");
-    const doneBtn = createElement("input");
-    doneBtn.type = "checkbox";
-    doneBtn.className = "w-5 h-5";
-    allBtns.appendChild(doneBtn);
-    [
-        { id: "edit", el: editBtn },
-        { id: "remove", el: remBtn },
-    ].forEach(({ el: btn, id }) => {
-        btn.setAttribute("id", id);
-        allBtns.appendChild(btn);
-    });
+    allActions.appendChild(checkedEl);
+    allActions.appendChild(remBtn);
+    allActions.appendChild(editBtn);
     newItem.appendChild(text);
-    newItem.appendChild(allBtns);
+    newItem.appendChild(allActions);
     return newItem;
 }
-/* ------------------------- Get items from storage ------------------------- */
-function getItemsFromStorage() {
-    return JSON.parse(localStorage.getItem("items") || "[]");
-}
 /* ------------------------------- Remove Item ------------------------------- */
-function removeItem(element, text) {
+function removeItem(element) {
     element.remove();
-    const filtered = getItemsFromStorage().filter((item) => item !== text);
-    if (list.children.length === 0) {
+    const text = element.querySelector("span").textContent;
+    removeItemFromStorage(text);
+    if (list.children.length === 0)
         replaceListAndEmpty(emptyInfo);
-    }
-    localStorage.setItem("items", JSON.stringify(filtered));
-    updateActions();
+    updateUIOfActions();
 }
-/* ------------------------------- Done Item ------------------------------- */
-function checkItem(element) {
-    console.log(element);
-    element.classList.toggle("line-through");
-    element.classList.toggle("font-normal");
-    element.classList.toggle("opacity-50");
+/* ------------------------- Mark Item as Completed ------------------------- */
+function markItemAsCompleted(element) {
+    const classNames = ["line-through", "font-normal", "opacity-50"];
+    classNames.forEach((className) => element.classList.toggle(className));
 }
-function openDialog(element, type, text) {
-    modal.classList.replace("opacity-0", "opacity-100");
-    modal.classList.replace("pointer-events-none", "pointer-events-auto");
-    const dialog = document.querySelector("#back-drop");
-    Array.from(dialog.children).forEach((child) => (child.getAttribute("id") !== type ? child.classList.add("hidden") : null));
-    console.log(dialog.firstElementChild);
-    dialog.addEventListener("click", deleteItem);
+/* ------------------------ Open Modal Before Delete ------------------------ */
+function openDialog(element, type) {
+    let content = modal.querySelector(`#${type}`);
+    if (type === "clearAll")
+        content = modal.querySelector(`#remove`);
+    [modal, content].forEach((element) => {
+        element.classList.replace("opacity-0", "opacity-100");
+        element.classList.replace("pointer-events-none", "pointer-events-auto");
+    });
+    modal.addEventListener("click", closeDialog);
+    content.addEventListener("click", (e) => {
+        e.stopPropagation();
+        switch (type) {
+            case "remove":
+                deleteItem(e);
+                break;
+            case "clearAll":
+                clearAll();
+                break;
+            // case "update":
+            //   editItem(e);
+            //   break;
+        }
+    });
     function deleteItem(e) {
         const clicked = e.target;
         const success = clicked.getAttribute("id") === "yes";
-        if (clicked.nodeName === "BUTTON" && text) {
+        if (clicked.nodeName === "BUTTON") {
             if (success) {
-                removeItem(element, text);
+                removeItem(element);
             }
             closeDialog();
         }
     }
+    // function editItem(e: MouseEvent) {
+    //   content.focus();
+    //   const input = content.querySelector("input") as HTMLInputElement;
+    //   input.value = element.textContent!;
+    // }
 }
 function closeDialog() {
     modal.classList.replace("opacity-100", "opacity-0");
     modal.classList.replace("pointer-events-auto", "pointer-events-none");
-    const dialog = document.querySelector("#back-drop");
-    Array.from(dialog.children).forEach((child) => child.classList.add("hidden"));
+    modal.querySelectorAll("aside").forEach((aside) => {
+        aside.classList.replace("opacity-100", "opacity-0");
+        aside.classList.replace("pointer-events-auto", "pointer-events-none");
+    });
 }
-function addActionstoBtn(e) {
-    const clickedBtn = e.target;
-    const parent = clickedBtn.closest("li");
-    const text = parent.querySelector("span");
-    switch (clickedBtn.getAttribute("id")) {
-        case "remove":
-            openDialog(parent, "remove", text.textContent);
-            break;
-        case "edit":
-            // removeItem(parent, text.textContent!);
-            openDialog(parent, "edit", text.textContent);
-            break;
-        case "done":
-            checkItem(text);
-            break;
+let editMode = false;
+/* ------------------------------- Edit Item ------------------------------- */
+function editItem(element, value) {
+    editMode = true;
+    list.querySelectorAll("#item").forEach((item) => item.classList.remove("opacity-50"));
+    element.classList.add("opacity-50");
+    const formSubmitBtn = form.querySelector("button[type='submit']");
+    formSubmitBtn.classList.replace("bg-black/80", "bg-green-500");
+    formSubmitBtn.textContent = "Update";
+    const span = element.firstChild;
+    addItemInput.value = span.textContent;
+    // formSubmitBtn.addEventListener("click", (e: MouseEvent) => {
+    //   e.preventDefault();
+    //   span.textContent = addItemInput.value;
+    //   addItemInput.value = "";
+    //   element.classList.remove("opacity-50");
+    //   formSubmitBtn.classList.replace("bg-green-500", "bg-black/80");
+    //   formSubmitBtn.textContent = "+ Add Item ";
+    //   editMode = false;
+    // });
+}
+function onClick(e) {
+    var _a, _b;
+    const clicked = e.target;
+    const itemIsClicked = clicked.nodeName === "LI" || clicked.nodeName === "SPAN";
+    const buttonIsClicked = clicked.nodeName === "BUTTON";
+    const checkboxIsClicked = clicked.nodeName === "INPUT";
+    if (itemIsClicked) {
+        editItem(clicked, clicked.firstChild.textContent);
+    }
+    else if (buttonIsClicked) {
+        const parent = clicked.closest("li");
+        switch (clicked.getAttribute("id")) {
+            case "remove":
+                openDialog(parent, "remove");
+                break;
+            case "update":
+                openDialog(parent, "update");
+                break;
+        }
+    }
+    if (checkboxIsClicked) {
+        const element = (_b = (_a = clicked.parentElement) === null || _a === void 0 ? void 0 : _a.parentElement) === null || _b === void 0 ? void 0 : _b.firstChild;
+        updateItemOfStorage(element.textContent);
+        markItemAsCompleted(element);
     }
 }
-/* ------------------------- Replace Project Content ------------------------ */
-const replaceListAndEmpty = (element) => shopContainer.replaceChild(element, shopContainer.firstElementChild);
 /* ------------------------------- Form Submit ------------------------------ */
 function handleSubmit(e) {
     e.preventDefault();
+    const storageItems = getItemsFromStorage().map((item) => item.text);
     const value = addItemInput.value.trim();
     if (!value) {
         return alert("Please enter a value");
     }
-    else if (getItemsFromStorage().includes(value)) {
+    else if (storageItems.includes(value)) {
         return alert("Item already exists");
     }
     else {
+        if (editMode) {
+            removeItemFromStorage(value);
+            const item = list.querySelector(".opacity-50");
+            console.log(item);
+            removeItem(item);
+            const btn = form.querySelector("button[type='submit']");
+            btn.classList.replace("bg-green-500", "bg-black/80");
+            btn.textContent = "+ Add Item";
+            editMode = false;
+        }
         // Add to UI and storage
         addItemToUI(value);
         // Add to  storage
@@ -135,11 +209,11 @@ function handleSubmit(e) {
         addItemInput.value = "";
         addItemInput.focus();
         // replaceListAndEmpty
-        updateActions();
+        updateUIOfActions();
     }
 }
 function addItemToUI(value) {
-    const item = createNewItem(value);
+    const item = createNewItem(value, false);
     // add to UI
     const addToUp = toggleBtn.classList.contains("rotate-180");
     if (addToUp) {
@@ -151,13 +225,13 @@ function addItemToUI(value) {
     // Replace empty list with new list
     replaceListAndEmpty(list);
 }
-function addItemToStorage(value) {
-    const items = getItemsFromStorage();
-    items.push(value);
-    localStorage.setItem("items", JSON.stringify(items));
-}
 /* ------------------------------ clearAllItems ----------------------------- */
-const clearAll = () => replaceListAndEmpty(emptyInfo);
+function clearAll() {
+    updateListUI("empty");
+    replaceListAndEmpty(emptyInfo);
+    setStorageItemsTo([]);
+    closeDialog();
+}
 /* ------------------------------ Filter Items ------------------------------ */
 function filterItems(e) {
     const allItems = list.querySelectorAll("#item");
@@ -172,31 +246,47 @@ function filterItems(e) {
             item.classList.remove("hidden");
         }
     });
-    e.target;
 }
 /* ------------------------------ UI Actions ------------------------------ */
-function emptyListUI() {
-    clearBtn.setAttribute("disabled", "true");
-    filterInput.classList.add("hidden");
+// function emptyListUI() {
+//   filterInput.classList.add("hidden");
+//   clearBtn.setAttribute("disabled", "true");
+// }
+// function nonEmptyListUI() {
+//   filterInput.classList.remove("hidden");
+//   clearBtn.removeAttribute("disabled");
+// }
+function updateListUI(state) {
+    switch (state) {
+        case "empty":
+            filterInput.classList.add("hidden");
+            clearBtn.setAttribute("disabled", "true");
+            break;
+        /* ---------------------------------------------------------------------- */
+        case "non-empty":
+            filterInput.classList.remove("hidden");
+            clearBtn.removeAttribute("disabled");
+            break;
+    }
 }
-function nonEmptyListUI() {
-    console.log("chagirildi");
-    filterInput.classList.remove("hidden");
-    clearBtn.removeAttribute("disabled");
+/* ------------------------- Replace Project Content ------------------------ */
+function replaceListAndEmpty(element) {
+    shopContainer.replaceChild(element, shopContainer.firstElementChild);
 }
-function updateActions() {
+function updateUIOfActions() {
     const items = list.querySelectorAll("#item");
     // it must be reacreated every time it's called because we have to know current state of items
     if (items.length === 0)
-        emptyListUI();
+        updateListUI("empty");
     else if (items.length === 1)
-        nonEmptyListUI();
+        updateListUI("non-empty");
 }
 function displayItems() {
     const storageItems = getItemsFromStorage();
     if (storageItems.length > 0) {
-        storageItems.forEach((item) => {
-            list.appendChild(createNewItem(item));
+        storageItems.forEach(({ text, completed }) => {
+            const newItem = createNewItem(text, completed);
+            list.appendChild(newItem);
         });
         replaceListAndEmpty(list);
     }
@@ -204,11 +294,11 @@ function displayItems() {
 /* ----------------------------- Event Listeners ---------------------------- */
 function initApp() {
     toggleBtn.addEventListener("click", toggleButton);
-    list.addEventListener("click", addActionstoBtn);
+    list.addEventListener("click", onClick);
     form.addEventListener("submit", handleSubmit);
-    clearBtn.addEventListener("click", clearAll);
+    clearBtn.addEventListener("click", openDialog.bind(null, clearBtn, "clearAll"));
     // filterInput.addEventListener("input", filterItems);
     displayItems();
-    updateActions();
+    updateUIOfActions();
 }
 initApp();

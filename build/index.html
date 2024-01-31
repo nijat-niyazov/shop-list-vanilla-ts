@@ -53,34 +53,41 @@
       </div>
     </div>
 
-    <div id="modal" class="bg-black/50 top-0 opacity-0 left-0 fixed w-screen h-screen transition-all duration-200 pointer-events-none">
-      
-        <div id="back-drop" class="flex  items-center h-full justify-center bg-blue-300/30"/>
-          
+    <div id="modal" class="bg-black/50 top-0 opacity-0 left-0 fixed w-screen h-screen transition-all duration-200 pointer-events-none items-center justify-center">
+        
+            <!-- ---------------------------- Remove Modal ----------------------------- -->
+            <aside  id="remove" class="w-[500px] z-10 h-auto bg-gray-300 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-10 rounded-md opacity-0 pointer-events-none duration-200">
+              <!--  pointer-events-none -->
+              
+              
+                <h1 class="font-bold text-center text-3xl">Are you sure?</h1>
+                <div class="flex gap-10 items-center mt-20">
+                  
+                  <button id="no" class="bg-red-500 w-1/2 p-2 font-semibold rounded-md text-white">No</button>
+                  <button id="yes" class="bg-green-500 w-1/2 p-2 font-semibold rounded-md text-white">Yes</button>
+                </div>
+             </aside>
+                
+                <!-- ----------------------------- Edit Modal ------------------------------ -->
+                <aside id="update"  class="w-[500px] z-10 h-auto bg-gray-300 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-10 rounded-md opacity-0 pointer-events-none duration-200">
+                  <!--  pointer-events-none -->
+                  <h1 class="font-bold text-center text-3xl">Update Item</h1>
+                  <form class="gap-4 grid  mt-20">
+        
+                    <input type="text" class="border-2 rounded-md p-1 border-black/50">
+                  </input>
+                    <button id="yes" class="bg-green-500 w-full p-2 font-semibold rounded-md">Submit</button>
+                  </form>
+                </aside>
           
         
-        <div id="remove" class="w-[500px] z-10 h-auto bg-gray-300 p-10 rounded-md  ">
-            <h1 class="font-bold text-center text-3xl">Are you sure?</h1>
-            <div class="flex gap-10 items-center mt-20">
+          
 
-              <button id="no" class="bg-red-500 w-1/2 p-2 font-semibold rounded-md">No</button>
-              <button id="yes" class="bg-green-500 w-1/2 p-2 font-semibold rounded-md">Yes</button>
-            </div>
-          </div>
+        
+          
+      </div>
 
-        <div id="edit" class="w-[500px] z-10 h-auto bg-gray-300 p-10 rounded-md  ">
-            <h1 class="font-bold text-center text-3xl">Update Item</h1>
-            <form class="gap-4 grid  mt-20">
-
-              <input type="text" class="border-2 rounded-md p-1 border-black/50"/>
-              <button id="yes" class="bg-green-500 w-full p-2 font-semibold rounded-md">Submit</button>
-            </form>
-          </div>
-
-
-        </div>
     
-      
   </body>
 </html>
 
