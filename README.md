@@ -26,10 +26,10 @@ The main idea was to build a basic app where you can add items to your shopping 
 
 To use this app:
 
-1. Copy the code from the repository to your computer.
-2. Open the index.html file in your web browser.
-3. Start managing your shopping list!
-4. Please make sure to update tests as appropriate.
+1. Open terminal in your computer.
+2. run command `git clone https://github.com/nijat-niyazov/shop-list-vanilla-ts.git`
+3. Open the index.html file in your web browser.
+4. Start managing your shopping list!
 
 ## Final
 
