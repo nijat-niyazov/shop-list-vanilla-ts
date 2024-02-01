@@ -26,7 +26,7 @@ function addItemToStorage(text) {
     setStorageItemsTo(items);
 }
 function updateItemOfStorage(text, checked, newText) {
-    const updated = getItemsFromStorage().map((item) => (item.text === text ? { completed: checked, text: newText !== null && newText !== void 0 ? newText : item.text } : item));
+    const updated = getItemsFromStorage().map((item) => item.text === text ? { completed: checked !== null && checked !== void 0 ? checked : item.completed, text: newText !== null && newText !== void 0 ? newText : item.text } : item);
     setStorageItemsTo(updated);
 }
 function removeItemFromStorage(text) {
@@ -175,7 +175,7 @@ function handleSubmit(e) {
     }
     else if (editMode) {
         const item = (_a = list.querySelector(".opacity-50")) === null || _a === void 0 ? void 0 : _a.querySelector("span");
-        updateItemOfStorage(item.innerText, false, value);
+        updateItemOfStorage(item.innerText, undefined, value);
         item.innerText = value;
         item.parentElement.classList.remove("opacity-50");
         editMode = false;

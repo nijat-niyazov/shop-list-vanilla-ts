@@ -35,8 +35,10 @@ function addItemToStorage(text: string) {
   setStorageItemsTo(items);
 }
 
-function updateItemOfStorage(text: string, checked: boolean, newText?: string) {
-  const updated = getItemsFromStorage().map((item) => (item.text === text ? { completed: checked, text: newText ?? item.text } : item));
+function updateItemOfStorage(text: string, checked?: boolean, newText?: string) {
+  const updated = getItemsFromStorage().map((item) =>
+    item.text === text ? { completed: checked ?? item.completed, text: newText ?? item.text } : item
+  );
 
   setStorageItemsTo(updated);
 }
@@ -217,7 +219,7 @@ function handleSubmit(e: SubmitEvent) {
   } else if (editMode) {
     const item = list.querySelector(".opacity-50")?.querySelector("span") as HTMLSpanElement;
 
-    updateItemOfStorage(item.innerText, false, value);
+    updateItemOfStorage(item.innerText, undefined, value);
     item.innerText = value;
 
     (item.parentElement as HTMLLIElement).classList.remove("opacity-50");
