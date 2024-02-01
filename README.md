@@ -1,7 +1,5 @@
 # Shop List Project
 
-Foobar is a Python library for dealing with word pluralization.
-
 ## Overview
 
 This project is a simple shopping list app made with TypeScript and plain JavaScript. I haven't been coding JavaScript for a while, so I thought it would be fun to make something practical like a shopping list to get back into it.
