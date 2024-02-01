@@ -1,6 +1,7 @@
 const form = document.querySelector("form") as HTMLFormElement;
 const addItemInput = form.querySelector("input") as HTMLInputElement;
 const toggleBtn = document.querySelector("#toggle") as HTMLButtonElement;
+const submitBtn = document.querySelector("button[type='submit']") as HTMLButtonElement;
 
 const filterInput = document.querySelector("#filter-input") as HTMLInputElement;
 
@@ -34,8 +35,9 @@ function addItemToStorage(text: string) {
   setStorageItemsTo(items);
 }
 
-function updateItemOfStorage(text: string) {
-  const updated = getItemsFromStorage().map((item) => (item.text === text ? { completed: !item.completed, text } : item));
+function updateItemOfStorage(text: string, checked: boolean, newText?: string) {
+  const updated = getItemsFromStorage().map((item) => (item.text === text ? { completed: checked, text: newText ?? item.text } : item));
+
   setStorageItemsTo(updated);
 }
 
@@ -104,7 +106,7 @@ function removeItem(element: HTMLElement) {
 
 /* ------------------------- Mark Item as Completed ------------------------- */
 function markItemAsCompleted(element: HTMLSpanElement) {
-  const classNames = ["line-through", "font-normal", "opacity-50"];
+  const classNames = ["line-through", "font-normal", "opacity-40"];
   classNames.forEach((className) => element.classList.toggle(className));
 }
 
@@ -129,9 +131,6 @@ function openDialog(element: HTMLElement, type: "remove" | "update" | "clearAll"
       case "clearAll":
         clearAll();
         break;
-      // case "update":
-      //   editItem(e);
-      //   break;
     }
   });
 
@@ -147,12 +146,6 @@ function openDialog(element: HTMLElement, type: "remove" | "update" | "clearAll"
       closeDialog();
     }
   }
-
-  // function editItem(e: MouseEvent) {
-  //   content.focus();
-  //   const input = content.querySelector("input") as HTMLInputElement;
-  //   input.value = element.textContent!;
-  // }
 }
 
 function closeDialog() {
@@ -165,63 +158,47 @@ function closeDialog() {
   });
 }
 
-let editMode = false;
-
 /* ------------------------------- Edit Item ------------------------------- */
 
-function editItem(element: HTMLLIElement, value: string) {
+let editMode = false;
+function setItemToEdit(element: HTMLLIElement) {
   editMode = true;
 
+  submitBtn.classList.replace("bg-black/80", "bg-green-500");
+  submitBtn.textContent = "Update";
+
   list.querySelectorAll("#item").forEach((item) => item.classList.remove("opacity-50"));
+  // we need to remove opacity-50 from all items before adding it to the new item
   element.classList.add("opacity-50");
 
-  const formSubmitBtn = form.querySelector("button[type='submit']") as HTMLButtonElement;
-
-  formSubmitBtn.classList.replace("bg-black/80", "bg-green-500");
-  formSubmitBtn.textContent = "Update";
-  const span = element.firstChild as HTMLSpanElement;
-
-  addItemInput.value = span.textContent!;
-
-  // formSubmitBtn.addEventListener("click", (e: MouseEvent) => {
-  //   e.preventDefault();
-
-  //   span.textContent = addItemInput.value;
-  //   addItemInput.value = "";
-
-  //   element.classList.remove("opacity-50");
-
-  //   formSubmitBtn.classList.replace("bg-green-500", "bg-black/80");
-  //   formSubmitBtn.textContent = "+ Add Item ";
-
-  //   editMode = false;
-  // });
+  const span = element.firstElementChild as HTMLSpanElement;
+  addItemInput.value = span.textContent as string;
 }
 
 function onClick(e: MouseEvent) {
-  const clicked = e.target as HTMLLIElement | HTMLSpanElement | HTMLButtonElement;
+  const clicked = e.target as HTMLLIElement | HTMLSpanElement | HTMLButtonElement | HTMLInputElement;
 
-  const itemIsClicked = clicked.nodeName === "LI" || clicked.nodeName === "SPAN";
-  const buttonIsClicked = clicked.nodeName === "BUTTON";
-  const checkboxIsClicked = clicked.nodeName === "INPUT";
+  const isButtonClicked = clicked.nodeName === "BUTTON";
+  const isCheckboxClicked = clicked.nodeName === "INPUT";
 
-  if (itemIsClicked) {
-    editItem(clicked as HTMLLIElement, (clicked.firstChild as HTMLSpanElement).textContent as string);
-  } else if (buttonIsClicked) {
-    const parent = clicked.closest("li") as HTMLLIElement;
+  const mainElement = clicked.closest("li") as HTMLLIElement;
+
+  if (isButtonClicked) {
+    // openDialog(mainElement, "remove");
 
     switch (clicked.getAttribute("id")) {
       case "remove":
-        openDialog(parent, "remove");
+        openDialog(mainElement, "remove");
         break;
       case "update":
-        openDialog(parent, "update");
+        setItemToEdit(mainElement);
         break;
     }
-  }
-  if (checkboxIsClicked) {
-    const element = clicked.parentElement?.parentElement?.firstChild as HTMLSpanElement;
-    updateItemOfStorage(element.textContent as string);
+  } else if (isCheckboxClicked) {
+    const element = clicked.parentElement?.previousElementSibling as HTMLSpanElement;
+    const input = clicked as HTMLInputElement;
+
+    updateItemOfStorage(element.textContent as string, input.checked);
     markItemAsCompleted(element);
   }
 }
@@ -229,7 +206,7 @@ function onClick(e: MouseEvent) {
 /* ------------------------------- Form Submit ------------------------------ */
 function handleSubmit(e: SubmitEvent) {
   e.preventDefault();
-  const storageItems = getItemsFromStorage().map((item) => item.text);
+  const storageItems = getItemsFromStorage().map(({ text }) => text);
 
   const value = addItemInput.value.trim();
 
@@ -237,32 +214,24 @@ function handleSubmit(e: SubmitEvent) {
     return alert("Please enter a value");
   } else if (storageItems.includes(value)) {
     return alert("Item already exists");
+  } else if (editMode) {
+    const item = list.querySelector(".opacity-50")?.querySelector("span") as HTMLSpanElement;
+
+    updateItemOfStorage(item.innerText, false, value);
+    item.innerText = value;
+
+    (item.parentElement as HTMLLIElement).classList.remove("opacity-50");
+    editMode = false;
   } else {
-    if (editMode) {
-      removeItemFromStorage(value);
-      const item = list.querySelector(".opacity-50") as HTMLLIElement;
-
-      console.log(item);
-
-      removeItem(item);
-      const btn = form.querySelector("button[type='submit']") as HTMLButtonElement;
-      btn.classList.replace("bg-green-500", "bg-black/80");
-      btn.textContent = "+ Add Item";
-      editMode = false;
-    }
-
     // Add to UI and storage
     addItemToUI(value);
     // Add to  storage
     addItemToStorage(value);
-
-    // Clear and focus input
-    addItemInput.value = "";
-    addItemInput.focus();
-
-    // replaceListAndEmpty
-    updateUIOfActions();
   }
+  updateUIOfActions();
+  // Clear and focus input
+  addItemInput.value = "";
+  addItemInput.focus();
 }
 
 function addItemToUI(value: string) {
@@ -281,19 +250,10 @@ function addItemToUI(value: string) {
   replaceListAndEmpty(list);
 }
 
-/* ------------------------------ clearAllItems ----------------------------- */
-
-function clearAll() {
-  updateListUI("empty");
-  replaceListAndEmpty(emptyInfo);
-  setStorageItemsTo([]);
-  closeDialog();
-}
-
 /* ------------------------------ Filter Items ------------------------------ */
-function filterItems(e: InputEvent) {
+function filterItems() {
   const allItems = list.querySelectorAll("#item") as NodeListOf<HTMLLIElement>;
-  const value = (e.target as HTMLInputElement).value.toLowerCase();
+  const value = filterInput.value.toLowerCase();
 
   allItems.forEach((item) => {
     const itemContext = item.firstChild?.textContent?.toLowerCase()!;
@@ -306,29 +266,24 @@ function filterItems(e: InputEvent) {
   });
 }
 
-/* ------------------------------ UI Actions ------------------------------ */
-// function emptyListUI() {
-//   filterInput.classList.add("hidden");
-//   clearBtn.setAttribute("disabled", "true");
-// }
+/* ------------------------------ clearAllItems ----------------------------- */
 
-// function nonEmptyListUI() {
-//   filterInput.classList.remove("hidden");
-//   clearBtn.removeAttribute("disabled");
-// }
+function clearAll() {
+  updateListUI("empty");
+  replaceListAndEmpty(emptyInfo);
+  setStorageItemsTo([]);
+  closeDialog();
+}
+
+/* ------------------------------ UI Actions ------------------------------ */
 
 function updateListUI(state: "empty" | "non-empty") {
-  switch (state) {
-    case "empty":
-      filterInput.classList.add("hidden");
-      clearBtn.setAttribute("disabled", "true");
-      break;
-
-    /* ---------------------------------------------------------------------- */
-    case "non-empty":
-      filterInput.classList.remove("hidden");
-      clearBtn.removeAttribute("disabled");
-      break;
+  if (state === "empty") {
+    filterInput.classList.add("hidden");
+    clearBtn.setAttribute("disabled", "true");
+  } else if (state === "non-empty") {
+    filterInput.classList.remove("hidden");
+    clearBtn.removeAttribute("disabled");
   }
 }
 
@@ -342,6 +297,12 @@ function updateUIOfActions() {
   // it must be reacreated every time it's called because we have to know current state of items
   if (items.length === 0) updateListUI("empty");
   else if (items.length === 1) updateListUI("non-empty");
+
+  // if form has changed into update mode
+  if (submitBtn.classList.contains("bg-green-500")) {
+    submitBtn.classList.replace("bg-green-500", "bg-black/80");
+    submitBtn.textContent = "+ Add Item";
+  }
 }
 
 function displayItems() {
@@ -365,7 +326,7 @@ function initApp() {
 
   form.addEventListener("submit", handleSubmit);
   clearBtn.addEventListener("click", openDialog.bind(null, clearBtn, "clearAll"));
-  // filterInput.addEventListener("input", filterItems);
+  filterInput.addEventListener("input", filterItems);
 
   displayItems();
   updateUIOfActions();

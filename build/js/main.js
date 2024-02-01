@@ -2,6 +2,7 @@
 const form = document.querySelector("form");
 const addItemInput = form.querySelector("input");
 const toggleBtn = document.querySelector("#toggle");
+const submitBtn = document.querySelector("button[type='submit']");
 const filterInput = document.querySelector("#filter-input");
 const shopContainer = document.querySelector(".items");
 const emptyInfo = shopContainer.querySelector("h4");
@@ -24,8 +25,8 @@ function addItemToStorage(text) {
     items.push({ completed: false, text });
     setStorageItemsTo(items);
 }
-function updateItemOfStorage(text) {
-    const updated = getItemsFromStorage().map((item) => (item.text === text ? { completed: !item.completed, text } : item));
+function updateItemOfStorage(text, checked, newText) {
+    const updated = getItemsFromStorage().map((item) => (item.text === text ? { completed: checked, text: newText !== null && newText !== void 0 ? newText : item.text } : item));
     setStorageItemsTo(updated);
 }
 function removeItemFromStorage(text) {
@@ -81,7 +82,7 @@ function removeItem(element) {
 }
 /* ------------------------- Mark Item as Completed ------------------------- */
 function markItemAsCompleted(element) {
-    const classNames = ["line-through", "font-normal", "opacity-50"];
+    const classNames = ["line-through", "font-normal", "opacity-40"];
     classNames.forEach((className) => element.classList.toggle(className));
 }
 /* ------------------------ Open Modal Before Delete ------------------------ */
@@ -103,9 +104,6 @@ function openDialog(element, type) {
             case "clearAll":
                 clearAll();
                 break;
-            // case "update":
-            //   editItem(e);
-            //   break;
         }
     });
     function deleteItem(e) {
@@ -118,11 +116,6 @@ function openDialog(element, type) {
             closeDialog();
         }
     }
-    // function editItem(e: MouseEvent) {
-    //   content.focus();
-    //   const input = content.querySelector("input") as HTMLInputElement;
-    //   input.value = element.textContent!;
-    // }
 }
 function closeDialog() {
     modal.classList.replace("opacity-100", "opacity-0");
@@ -132,57 +125,47 @@ function closeDialog() {
         aside.classList.replace("pointer-events-auto", "pointer-events-none");
     });
 }
-let editMode = false;
 /* ------------------------------- Edit Item ------------------------------- */
-function editItem(element, value) {
+let editMode = false;
+function setItemToEdit(element) {
     editMode = true;
+    submitBtn.classList.replace("bg-black/80", "bg-green-500");
+    submitBtn.textContent = "Update";
     list.querySelectorAll("#item").forEach((item) => item.classList.remove("opacity-50"));
+    // we need to remove opacity-50 from all items before adding it to the new item
     element.classList.add("opacity-50");
-    const formSubmitBtn = form.querySelector("button[type='submit']");
-    formSubmitBtn.classList.replace("bg-black/80", "bg-green-500");
-    formSubmitBtn.textContent = "Update";
-    const span = element.firstChild;
+    const span = element.firstElementChild;
     addItemInput.value = span.textContent;
-    // formSubmitBtn.addEventListener("click", (e: MouseEvent) => {
-    //   e.preventDefault();
-    //   span.textContent = addItemInput.value;
-    //   addItemInput.value = "";
-    //   element.classList.remove("opacity-50");
-    //   formSubmitBtn.classList.replace("bg-green-500", "bg-black/80");
-    //   formSubmitBtn.textContent = "+ Add Item ";
-    //   editMode = false;
-    // });
 }
 function onClick(e) {
-    var _a, _b;
+    var _a;
     const clicked = e.target;
-    const itemIsClicked = clicked.nodeName === "LI" || clicked.nodeName === "SPAN";
-    const buttonIsClicked = clicked.nodeName === "BUTTON";
-    const checkboxIsClicked = clicked.nodeName === "INPUT";
-    if (itemIsClicked) {
-        editItem(clicked, clicked.firstChild.textContent);
-    }
-    else if (buttonIsClicked) {
-        const parent = clicked.closest("li");
+    const isButtonClicked = clicked.nodeName === "BUTTON";
+    const isCheckboxClicked = clicked.nodeName === "INPUT";
+    const mainElement = clicked.closest("li");
+    if (isButtonClicked) {
+        // openDialog(mainElement, "remove");
         switch (clicked.getAttribute("id")) {
             case "remove":
-                openDialog(parent, "remove");
+                openDialog(mainElement, "remove");
                 break;
             case "update":
-                openDialog(parent, "update");
+                setItemToEdit(mainElement);
                 break;
         }
     }
-    if (checkboxIsClicked) {
-        const element = (_b = (_a = clicked.parentElement) === null || _a === void 0 ? void 0 : _a.parentElement) === null || _b === void 0 ? void 0 : _b.firstChild;
-        updateItemOfStorage(element.textContent);
+    else if (isCheckboxClicked) {
+        const element = (_a = clicked.parentElement) === null || _a === void 0 ? void 0 : _a.previousElementSibling;
+        const input = clicked;
+        updateItemOfStorage(element.textContent, input.checked);
         markItemAsCompleted(element);
     }
 }
 /* ------------------------------- Form Submit ------------------------------ */
 function handleSubmit(e) {
+    var _a;
     e.preventDefault();
-    const storageItems = getItemsFromStorage().map((item) => item.text);
+    const storageItems = getItemsFromStorage().map(({ text }) => text);
     const value = addItemInput.value.trim();
     if (!value) {
         return alert("Please enter a value");
@@ -190,27 +173,23 @@ function handleSubmit(e) {
     else if (storageItems.includes(value)) {
         return alert("Item already exists");
     }
+    else if (editMode) {
+        const item = (_a = list.querySelector(".opacity-50")) === null || _a === void 0 ? void 0 : _a.querySelector("span");
+        updateItemOfStorage(item.innerText, false, value);
+        item.innerText = value;
+        item.parentElement.classList.remove("opacity-50");
+        editMode = false;
+    }
     else {
-        if (editMode) {
-            removeItemFromStorage(value);
-            const item = list.querySelector(".opacity-50");
-            console.log(item);
-            removeItem(item);
-            const btn = form.querySelector("button[type='submit']");
-            btn.classList.replace("bg-green-500", "bg-black/80");
-            btn.textContent = "+ Add Item";
-            editMode = false;
-        }
         // Add to UI and storage
         addItemToUI(value);
         // Add to  storage
         addItemToStorage(value);
-        // Clear and focus input
-        addItemInput.value = "";
-        addItemInput.focus();
-        // replaceListAndEmpty
-        updateUIOfActions();
     }
+    updateUIOfActions();
+    // Clear and focus input
+    addItemInput.value = "";
+    addItemInput.focus();
 }
 function addItemToUI(value) {
     const item = createNewItem(value, false);
@@ -225,17 +204,10 @@ function addItemToUI(value) {
     // Replace empty list with new list
     replaceListAndEmpty(list);
 }
-/* ------------------------------ clearAllItems ----------------------------- */
-function clearAll() {
-    updateListUI("empty");
-    replaceListAndEmpty(emptyInfo);
-    setStorageItemsTo([]);
-    closeDialog();
-}
 /* ------------------------------ Filter Items ------------------------------ */
-function filterItems(e) {
+function filterItems() {
     const allItems = list.querySelectorAll("#item");
-    const value = e.target.value.toLowerCase();
+    const value = filterInput.value.toLowerCase();
     allItems.forEach((item) => {
         var _a, _b;
         const itemContext = (_b = (_a = item.firstChild) === null || _a === void 0 ? void 0 : _a.textContent) === null || _b === void 0 ? void 0 : _b.toLowerCase();
@@ -247,26 +219,22 @@ function filterItems(e) {
         }
     });
 }
+/* ------------------------------ clearAllItems ----------------------------- */
+function clearAll() {
+    updateListUI("empty");
+    replaceListAndEmpty(emptyInfo);
+    setStorageItemsTo([]);
+    closeDialog();
+}
 /* ------------------------------ UI Actions ------------------------------ */
-// function emptyListUI() {
-//   filterInput.classList.add("hidden");
-//   clearBtn.setAttribute("disabled", "true");
-// }
-// function nonEmptyListUI() {
-//   filterInput.classList.remove("hidden");
-//   clearBtn.removeAttribute("disabled");
-// }
 function updateListUI(state) {
-    switch (state) {
-        case "empty":
-            filterInput.classList.add("hidden");
-            clearBtn.setAttribute("disabled", "true");
-            break;
-        /* ---------------------------------------------------------------------- */
-        case "non-empty":
-            filterInput.classList.remove("hidden");
-            clearBtn.removeAttribute("disabled");
-            break;
+    if (state === "empty") {
+        filterInput.classList.add("hidden");
+        clearBtn.setAttribute("disabled", "true");
+    }
+    else if (state === "non-empty") {
+        filterInput.classList.remove("hidden");
+        clearBtn.removeAttribute("disabled");
     }
 }
 /* ------------------------- Replace Project Content ------------------------ */
@@ -280,6 +248,11 @@ function updateUIOfActions() {
         updateListUI("empty");
     else if (items.length === 1)
         updateListUI("non-empty");
+    // if form has changed into update mode
+    if (submitBtn.classList.contains("bg-green-500")) {
+        submitBtn.classList.replace("bg-green-500", "bg-black/80");
+        submitBtn.textContent = "+ Add Item";
+    }
 }
 function displayItems() {
     const storageItems = getItemsFromStorage();
@@ -297,7 +270,7 @@ function initApp() {
     list.addEventListener("click", onClick);
     form.addEventListener("submit", handleSubmit);
     clearBtn.addEventListener("click", openDialog.bind(null, clearBtn, "clearAll"));
-    // filterInput.addEventListener("input", filterItems);
+    filterInput.addEventListener("input", filterItems);
     displayItems();
     updateUIOfActions();
 }
