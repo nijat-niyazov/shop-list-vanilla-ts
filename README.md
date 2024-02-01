@@ -20,7 +20,8 @@ The main idea was to build a basic app where you can add items to your shopping 
 
 - TypeScript: A tool that helps write safer JavaScript code.
 - DOM API: Using JavaScript to change what's on the webpage.
-- HTML/CSS: Basic stuff for how the app looks and behaves.
+- HTML/CSS: Skeleton of App
+- Tailwind CDN: Used as style framework
 
 ## Getting Started
 
